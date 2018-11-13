@@ -3,29 +3,33 @@ np = core.np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-def calcul_moyenne_degres(N, M, show=False):
-	degres = np.zeros((M, N))
+def calcul_nombre_degres(N, M, show=False):
+	#on fait avec un seul graphe
+	nb_s_degres= [0]*N #nombre de sommets qui ont le degre s 
 	for _ in range(M):
 		G = core.construire_G(N)
-		degres[_] = np.sum(G, axis=0)
-	degres_average = np.average(degres, axis=0)
-	if show:
-		plt.plot(np.linspace(0, N, N), degres_average)
+		degres = np.sum(G, axis=0).astype(int) #stocke les degres de chaque sommet 
+		for d in degres: #pour chaque sommet, on regarde son degre d 
+			nb_s_degres[d] += 1
+	tmp = [(i, nb_s_degres[i]) for i in range(len(nb_s_degres)) if nb_s_degres[i] != 0]
+	X = np.array([t[0] for t in tmp])
+	Y = np.array([t[1] for t in tmp])
+	Y = [Y[i] for i in range(len(X)) if X[i] > 10 and X[i] < 50] #if X[i] < 50"""
+	X = [x for x in X if x > 10 and x < 50] #if x < 50"""
+	if show:	
+		plt.plot(np.log(X), np.log(Y))
 		plt.show()
-	return degres_average
+	return np.log(X), np.log(Y)
 
-def log_degres_log_k(N, M, N_tronque=0, show=False):
-	log_degres = np.zeros((M, N))
-	for _ in range(M):
-		G = core.construire_G(N)
-		log_degres[_] = np.log(np.sum(G, axis=0))
-	log_degres_avg = np.average(log_degres, axis=0)
-	if show:
-		plt.clf()
-		X = np.linspace(N_tronque, N, N - N_tronque)
-		log_k = np.log(X)
-		plt.plot(log_k, log_degres_avg[N_tronque:N])
-		plt.show()
-	return log_degres_avg
+def regression(log_X, log_Y):
+	regr = LinearRegression()
+	regr.fit(log_Y, log_X)
+	return regr.coef_
 
-log_degres_log_k(500, 500, 0, True)
+lX, lY = calcul_nombre_degres(2000, 10, True)
+lX = [[x] for x in lX]
+lY = [[y] for y in lY]
+print(lX)
+coef = regression(lX, lY)
+print(coef) #je trouve quelque chose entre 0.4 et 0.5
+#attention : la loi est pas vraie pour les k trop petits
