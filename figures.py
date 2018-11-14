@@ -11,11 +11,13 @@ def calcul_nombre_degres(N, M, show=False):
 		degres = np.sum(G, axis=0).astype(int) #stocke les degres de chaque sommet 
 		for d in degres: #pour chaque sommet, on regarde son degre d 
 			nb_s_degres[d] += 1
+	nb_s_degres = np.array(nb_s_degres)
+	nb_s_degres = list(nb_s_degres/np.sum(nb_s_degres))
 	tmp = [(i, nb_s_degres[i]) for i in range(len(nb_s_degres)) if nb_s_degres[i] != 0]
 	X = np.array([t[0] for t in tmp])
 	Y = np.array([t[1] for t in tmp])
-	Y = [Y[i] for i in range(len(X)) if X[i] > 10 and X[i] < 50] #if X[i] < 50"""
-	X = [x for x in X if x > 10 and x < 50] #if x < 50"""
+	Y = [Y[i] for i in range(len(X))] #if X[i] < 50"""
+	X = [x for x in X] #if x < 50"""
 	if show:	
 		plt.plot(np.log(X), np.log(Y))
 		plt.show()
@@ -26,10 +28,9 @@ def regression(log_X, log_Y):
 	regr.fit(log_Y, log_X)
 	return regr.coef_
 
-lX, lY = calcul_nombre_degres(2000, 10, True)
-lX = [[x] for x in lX]
-lY = [[y] for y in lY]
-print(lX)
-coef = regression(lX, lY)
-print(coef) #je trouve quelque chose entre 0.4 et 0.5
-#attention : la loi est pas vraie pour les k trop petits
+if __name__ == '__main__':
+	lX, lY = calcul_nombre_degres(3000, 100, True)
+	lX = [[x] for x in lX]
+	lY = [[y] for y in lY]
+	#Je trouve, en regardant pour k assez grand (mais avec des donnees assez bruitees), 
+	#alpha entre 2 et 2.66

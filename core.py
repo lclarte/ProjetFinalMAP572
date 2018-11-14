@@ -12,7 +12,7 @@ def recurrence_G(matrice):
 
 def recurrence_G_optimise(liste, degres): 
 	#1 : on va stocker sous forme de liste d'adjacence
-	#2 : on va stocke a cote de notre liste la liste des differents degres 
+	#2 : on va stocker a cote de notre liste la liste des differents degres 
 	somme = sum(degres)
 	assert somme == 2*len(degres) - 1
 	n = len(liste)
