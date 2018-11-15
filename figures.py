@@ -3,6 +3,24 @@ np = core.np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+def estimation_probas_degres(N, M, show=False):
+	degres_sommets = np.zeros((N, N))
+	#matrice de taille N x N : l'element (i, j) est le nombre de graphes (entre 0 et M) dans lequel
+	#le sommet i a eu j aretes
+	for _ in range(M):
+		G = core.construire_G(N)
+		degres = np.sum(G, axis=0).astype(int)
+		for i in range(N):
+			d = degres[i]
+			degres_sommets[i, d] += 1.0
+	for i in range(N):
+		degres_sommets[i] = degres_sommets[i]/np.linalg.norm(degres_sommets[i])
+	probas_degres = np.average(degres_sommets, axis=0)
+	if show:
+		plt.plot(np.linspace(1, N, N), probas_degres)
+		plt.show()
+	return probas_degres
+
 def calcul_nombre_degres(N, M, show=False):
 	#on fait avec un seul graphe
 	nb_s_degres= [0]*N #nombre de sommets qui ont le degre s 
@@ -29,8 +47,9 @@ def regression(log_X, log_Y):
 	return regr.coef_
 
 if __name__ == '__main__':
-	lX, lY = calcul_nombre_degres(3000, 100, True)
-	lX = [[x] for x in lX]
-	lY = [[y] for y in lY]
-	#Je trouve, en regardant pour k assez grand (mais avec des donnees assez bruitees), 
-	#alpha entre 2 et 2.66
+	N, M = 5000, 500
+	probas_degres = estimation_probas_degres(N, M, show=False)
+	log_progas = np.log(probas_degres)
+	log_linspace = np.log(np.linspace(1, N, N))
+	plt.plot(log_linspace, log_progas)
+	plt.show()
