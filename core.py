@@ -28,8 +28,8 @@ def list_to_matrix(liste):
 	"Convertit une liste d'adjacence en matrice d'adjacence"
 	n = len(liste)
 	matrix = np.zeros((n, n))
-	for v in liste:
-		for w in v:
+	for v in range(len(liste)):
+		for w in liste[v]:
 			matrix[v, w] = matrix[w, v] = 1
 	return matrix
 
