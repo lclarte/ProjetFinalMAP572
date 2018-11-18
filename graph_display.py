@@ -1,5 +1,6 @@
 import core
 np = core.np
+np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
 
 class GestionnaireAffichage():
@@ -13,6 +14,24 @@ class GestionnaireAffichage():
 		X = np.random.uniform(size=n)
 		Y = np.random.uniform(size=n)
 		return np.array([[x, y] for (x, y) in zip(X, Y)])
+
+	def afficher_points_vecteurs(self, M, gradient):
+		n = len(M)	
+		X, Y = M[:, 0], M[:, 1]
+		U, V = gradient[:, 0], gradient[:, 1]
+		plt.quiver(X, Y, U, V)
+		for i in range(n):
+			for j in range(i, n):
+				if self.G[i, j] == 1: 
+					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='k')
+		plt.show()
+
+	def calculer_affichage_optimise(self):
+		D_star = calculer_D_star(floyd_warshall(G))
+		M = self.calculer_points_affichage()
+		n = len(M)
+		gradient = calculer_gradient_energie(M, D_star)
+		self.afficher_points_vecteurs(M, gradient) #juste pour tester
 
 	def afficher_graphe(self, show=True):
 		n = len(self.G)
@@ -43,8 +62,8 @@ class GestionnaireAffichage():
 def calculer_gradient_energie(M, D_star):
 	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
 	a chacune des composantes"
-	tmp_vec = lambda vec, dist: [vec/dist, np.zeros((2,))][dist == 0]
-	tmp_coeffs = lambda x, dist: [x, 0.0][dist == 0]
+	tmp_vec = lambda vec, dist: [vec/dist, np.zeros((2,))][dist == 0.0]
+	tmp_coeffs = lambda x, dist: [x/dist, 0.0][dist == 0.0]
 	#ces deux fonctions permettent d'effectuer les operations avec numpy sans avoir des nan partout
 
 	n = len(M)
@@ -52,8 +71,10 @@ def calculer_gradient_energie(M, D_star):
 
 	vecteurs_M  = np.array([[tmp_vec((M[i] - M[j]), distances_M[i, j]) for j in range(n)] for i in range(n)])
 	#vecteurs_= vecteurs directeurs des aretes entre chacun des points
-	coefficients = np.sqrt(0.5)*tmp_coeffs((np.sqrt(0.5)*distances_M - D_star)/D_star) #tableau de taille (N, N)
-	gradient_E = np.zeros((N, 2)	)
+	coefficients = np.sqrt(0.5)*np.array([[tmp_coeffs(np.sqrt(0.5)*distances_M[i, j] - D_star[i, j], D_star[i, j]) \
+		for i in range(n)] for j in range(n)]) #tableau de taille (N, N)
+	gradient_E = np.dot(coefficients, vecteurs_M)
+	gradient_E = np.array([gradient_E[i, i] for i in range(n)])
 	return gradient_E
 
 def floyd_warshall(G):
@@ -66,10 +87,13 @@ def floyd_warshall(G):
 		for i in range(n):
 			for j in range(n):
 				M[i, j] = min(M[i, j], M[i, k] + M[k, j])
-	return M
+	return M #M est la matrice de distance
+
+def calculer_D_star(D):
+	D_max = np.max(D)
+	return D/D_max
 
 if __name__ == '__main__':
 	G = core.construire_G(5)
-	print("G = ", G)
-	print("=")
-	print(floyd_warshall(G))
+	g = GestionnaireAffichage(G)
+	g.calculer_affichage_optimise()
