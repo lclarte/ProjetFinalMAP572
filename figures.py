@@ -51,17 +51,18 @@ class GestionnaireCalcul:
 	def sauvegarder_sdc(self, fichier):
 		np.save(fichier, self.sommets_degres_comptes)
 
-def afficher_log_log(probas):
-	M = len(probas)
-	X = np.log(np.linspace(1, M, M))
+def afficher_log_log(probas, M):
+	N = len(probas)
+	X = np.log(np.linspace(1, N, N))
 	Y = np.log(probas)
 	plt.plot(X, Y)
+	plt.suptitle("Courbe de log(P(s = d)) en fonction de log(d). N = " +str(N) + ", M = " + str(M))
 	plt.show()
 
 
 if __name__ == '__main__':
-	N, M = 2000, 100
+	N, M = 5000, 200
 	gc = GestionnaireCalcul(N, M)
 	gc.estimation_sdc(verbose=True)
 	probas = gc.calculer_probas()
-	afficher_log_log(probas)
+	afficher_log_log(probas, M)
