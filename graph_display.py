@@ -6,9 +6,12 @@ import matplotlib.pyplot as plt
 class GestionnaireAffichage():
 	def __init__(self, G):
 		self.G = G
+		n = len(self.G)
 		self.M = None
 		self.nb_iter = 1000
 		self.delta_t = 0.01
+		self.suptitle = "Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
+				"; dt : " + str(self.delta_t)
 
 	def calculer_points_affichage(self):
 		plt.clf()
@@ -41,13 +44,12 @@ class GestionnaireAffichage():
 			for j in range(n):
 				if self.G[i, j] == 1:
 					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='k')
-		plt.suptitle("Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
-				"; dt : " + str(self.delta_t))
+		plt.suptitle(self.suptitle)
 		plt.show()
 
 	def calculer_affichage_optimise(self):
 		#initialisation
-		D_star = calculer_D_star(floyd_warshall(G))
+		D_star = calculer_D_star(floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
 		n = len(M)
 		#on essaie avec un certain nombre d'iterations 
@@ -96,5 +98,7 @@ def calculer_D_star(D):
 if __name__ == '__main__':
 	G = core.construire_G(20)
 	g = GestionnaireAffichage(G)
+	M = g.calculer_points_affichage()
+	g.afficher_points(M, debug=False)
 	M = g.calculer_affichage_optimise()
 	g.afficher_points(M, debug=True, D=floyd_warshall(g.G))

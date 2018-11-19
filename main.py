@@ -1,19 +1,11 @@
-import numpy as np
+import core
+import graph_display as g_d
 
-#structure de donnees : matrice d'adjacence 
-def recurrence_G(matrice):
-	n = len(matrice)
-	matrice2 = np.zeros((n+1, n+1))
-	matrice2[:n, :n] = matrice
-	probas = np.sum(matrice, axis=0)/(2*n-1)
-	v = np.random.choice(n, p=probas)
-	matrice2[v, n] = matrice2[n, v] = 1
-	return matrice2
-
-def construire_G(n):
-	matrice = np.array([[1]])
-	for _ in range(n-1):
-		matrice = recurrence_G(matrice)
-	return matrice
-
-print(construire_G(10))
+#essai de differents delta 
+deltas = [0, 1, 10, 1000]
+n = 50
+for d in deltas:
+	G = core.construire_G_delta(n, d)
+	g = g_d.GestionnaireAffichage(G)
+	M = g.calculer_affichage_optimise()
+	g.afficher_points(M)

@@ -1,5 +1,7 @@
 import numpy as np
 
+delta = 0 #utilise dans le delta-attachement preferentiel 
+
 #structure de donnees : matrice d'adjacence 
 def recurrence_G(matrice):
 	n = len(matrice)
@@ -10,13 +12,25 @@ def recurrence_G(matrice):
 	matrice2[v, n] = matrice2[n, v] = 1
 	return matrice2
 
-def recurrence_G_optimise(liste, degres): 
+def construire_G_normal(n):
+	matrice = np.array([[1]])
+	for _ in range(n-1):
+		matrice = recurrence_G(matrice)
+	return matrice
+
+#============= Nouvel algorithme =============
+
+def recurrence_G_optimise(liste, degres, fn_probas=None): 
+	"""fn_probas donne la probabilite du sommet par rapport a son degre et"""
 	#1 : on va stocker sous forme de liste d'adjacence
 	#2 : on va stocker a cote de notre liste la liste des differents degres 
 	somme = sum(degres)
 	assert somme == 2*len(degres) - 1
 	n = len(liste)
-	probas = [float(d)/float(somme) for d in degres]
+	if fn_probas == None:#on est dans le cas normal
+		probas = [float(d)/float(somme) for d in degres]
+	else:
+		probas = [fn_probas(d, somme) for d in degres]
 	v = np.random.choice(n, p=probas)
 	liste.append([v])
 	liste[v].append(n)
@@ -33,17 +47,18 @@ def list_to_matrix(liste):
 			matrix[v, w] = matrix[w, v] = 1
 	return matrix
 
-def construire_G_normal(n):
-	matrice = np.array([[1]])
-	for _ in range(n-1):
-		matrice = recurrence_G(matrice)
-	return matrice
-
-def construire_G_optimise(n):
+def construire_G_optimise(n, fn_probas=None):
 	liste = [[0]]
 	degres = [1]
 	for _ in range(n-1):
-		liste, degres = recurrence_G_optimise(liste, degres)
+		liste, degres = recurrence_G_optimise(liste, degres, fn_probas)
 	return list_to_matrix(liste)
 
+#fonction pour le delta-attachement préférentiel
+def fn_probas_delta(degre, somme, delta):
+	#somme = 2*k - 1 
+	k = (somme + 1)/2
+	return float(degre + delta)/float(somme + k*delta)
+
 construire_G = construire_G_optimise
+construire_G_delta = lambda n, delta: construire_G_optimise(n, fn_probas= lambda d, s: fn_probas_delta(d, s, delta))
