@@ -60,5 +60,14 @@ def fn_probas_delta(degre, somme, delta):
 	k = (somme + 1)/2
 	return float(degre + delta)/float(somme + k*delta)
 
+def orienter_graphe(G):
+	#ici, si j > i alors j est oriente vers i donc on a juste a mettre a 0 tous les elements dans la sur diagonale
+	n = len(G)
+	G_or = np.copy(G)
+	for i in range(n):
+		for j in range(i+1, n):
+			G_or[i, j] = 0
+	return G_or
+
 construire_G = construire_G_optimise
 construire_G_delta = lambda n, delta: construire_G_optimise(n, fn_probas= lambda d, s: fn_probas_delta(d, s, delta))
