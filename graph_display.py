@@ -7,6 +7,8 @@ class GestionnaireAffichage():
 	def __init__(self, G):
 		self.G = G
 		self.M = None
+		self.nb_iter = 1000
+		self.delta_t = 0.01
 
 	def calculer_points_affichage(self):
 		plt.clf()
@@ -22,42 +24,40 @@ class GestionnaireAffichage():
 		plt.quiver(X, Y, U, V)
 		for i in range(n):
 			for j in range(i, n):
-				if self.G[i, j] == 1: 
+				if self.G[i, j] == 1:
+					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='r')
+		plt.show()
+
+	def afficher_points(self, M, debug=True, D=None):
+		plt.clf()
+		n = len(self.G)
+		X, Y = M[:, 0], M[:, 1]
+		if debug:
+			if not D is None:
+				print("distances : ", D)
+			for i in range(n):
+				plt.text(X[i], Y[i], str(i+1))
+		for i in range(n):
+			for j in range(n):
+				if self.G[i, j] == 1:
 					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='k')
+		plt.suptitle("Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
+				"; dt : " + str(self.delta_t))
 		plt.show()
 
 	def calculer_affichage_optimise(self):
+		#initialisation
 		D_star = calculer_D_star(floyd_warshall(G))
 		M = self.calculer_points_affichage()
 		n = len(M)
-		gradient = calculer_gradient_energie(M, D_star)
-		self.afficher_points_vecteurs(M, gradient) #juste pour tester
+		#on essaie avec un certain nombre d'iterations 
+		for iter in range(self.nb_iter):
+			gradient = calculer_gradient_energie(M, D_star)
+			M += -self.delta_t*gradient
+		return M
 
-	def afficher_graphe(self, show=True):
-		n = len(self.G)
-		M = self.calculer_points_affichage()
-		self.M = M
-		X, Y = M[:, 0], M[:, 1]
-		plt.plot(X, Y, 'bo')
-		for i in range(n):
-			for j in range(i, n):
-				if self.G[i, j] == 1: 
-					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='k')
-		if show:
-			plt.show()
-
-
-#Pas necessaire normalement
-#def energie(M, D):
-#	"M : points associes a chaque sommet du graphe, sous forme d'array numpy N x 2'\
-#	D : distances entre les differents sommets du graphe, sous forme d'une matrice numpy"
-#	N = len(M)
-#	#on met des 1 sur la diagonale de D pour eviter la division par 0
-#	D_star = D/np.max(D)
-#	D_star2 = D_star + np.eye(N)
-#	distances_M = np.array([[np.linalg.norm(M[i] - M[j]) for j in range(N)] for i in range(N)])
-#	numerateur = (np.sqrt(0.5)*distances_M - D_star)
-#	return np.sum(numerateur/D_star2)
+def energie(M, D_star):
+	pass#numerateur = np.sqrt(0.5)*
 
 def calculer_gradient_energie(M, D_star):
 	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
@@ -94,6 +94,7 @@ def calculer_D_star(D):
 	return D/D_max
 
 if __name__ == '__main__':
-	G = core.construire_G(5)
+	G = core.construire_G(20)
 	g = GestionnaireAffichage(G)
-	g.calculer_affichage_optimise()
+	M = g.calculer_affichage_optimise()
+	g.afficher_points(M, debug=True, D=floyd_warshall(g.G))
