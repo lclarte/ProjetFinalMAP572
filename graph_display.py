@@ -32,15 +32,17 @@ class GestionnaireAffichage():
 					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='r')
 		plt.show()
 
-	def afficher_points(self, M, debug=True, D=None):
+	def afficher_points(self, M, debug=True, D=None, labels=None):
+		colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
 		plt.clf()
 		n = len(self.G)
 		X, Y = M[:, 0], M[:, 1]
 		if debug:
 			if not D is None:
 				print("distances : ", D)
-			for i in range(n):
-				plt.text(X[i], Y[i], str(i+1))
+		for i in range(n):
+			plt.text(X[i], Y[i], str(i+1))
+			plt.scatter(X[i], Y[i],c=colors[labels[i]])
 		for i in range(n):
 			for j in range(n):
 				if self.G[i, j] == 1:
