@@ -10,6 +10,7 @@ class GestionnaireAffichage():
 		self.M = None
 		self.nb_iter = 1000
 		self.delta_t = 0.01
+		self.seuil   = 0.0001 #norme du gradient de E "par sommet"
 		self.suptitle = "Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
 				"; dt : " + str(self.delta_t)
 
@@ -47,19 +48,34 @@ class GestionnaireAffichage():
 		plt.suptitle(self.suptitle)
 		plt.show()
 
-	def calculer_affichage_optimise(self):
+	def calculer_affichage_optimise(self, verbose=True):
 		#initialisation
 		D_star = calculer_D_star(floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
 		n = len(M)
+		gradient = None
+		energies = []
+		grad_e_normes = []
 		#on essaie avec un certain nombre d'iterations 
-		for iter in range(self.nb_iter):
+		while gradient is None or np.linalg.norm(gradient) >= n*n*self.seuil:
+		#for iter in range(self.nb_iter):
 			gradient = calculer_gradient_energie(M, D_star)
 			M += -self.delta_t*gradient
+			energies.append(energie(M, D_star))
+			grad_e_normes.append(np.linalg.norm(gradient))
+		if verbose:
+			plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
+			plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
+			plt.show()
 		return M
 
 def energie(M, D_star):
-	pass#numerateur = np.sqrt(0.5)*
+	n = len(M)
+	distances = np.array([[np.linalg.norm(M[i] - M[j]) for j in range(n)] for i in range(n)])
+	numerateur = (np.sqrt(0.5)*distances - D_star)**2
+	tmp_f = lambda x : [x, 1.0][x == 0.0]
+	denominateur = np.array([[tmp_f(D_star[i, j]**2) for i in range(n)] for j in range(n)])
+	return np.sum(numerateur/denominateur)
 
 def calculer_gradient_energie(M, D_star):
 	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
@@ -101,4 +117,4 @@ if __name__ == '__main__':
 	M = g.calculer_points_affichage()
 	g.afficher_points(M, debug=False)
 	M = g.calculer_affichage_optimise()
-	g.afficher_points(M, debug=True, D=floyd_warshall(g.G))
+	g.afficher_points(M, debug=False, D=floyd_warshall(g.G))

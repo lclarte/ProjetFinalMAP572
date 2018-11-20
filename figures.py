@@ -66,3 +66,4 @@ if __name__ == '__main__':
 	gc.estimation_sdc(verbose=True)
 	probas = gc.calculer_probas()
 	afficher_log_log(probas, M)
+	np.save(probas)

@@ -18,8 +18,7 @@ def calculer_vecteur_pagerank(P):
 	"P est la matrice P_epsilon calculee par la fonction calculer_matrice_pagerank"
 	w, vl, vr = linalg.eig(P, left=True, right=True)
 	w = w.astype(np.float64)
-	print(w)
-	print(np.where(w == 1.0)[0]) #ne marche pas, probleme d'arrondi
+	#TODO : calculer 
 
 import core
 G = core.construire_G(5)
