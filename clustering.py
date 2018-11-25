@@ -13,6 +13,7 @@ class ClusteringManager():
 		self.k = k
 
 	def calculer_similarite_fw(self, G):
+		"Ne marche pas actuellement"
 		distances = floyd_warshall(G) + 1 #on ajoute un car pour un meme sommet, distances[i, i] = 0
 		#et l'inverse buguera
 		return (1/distances)
@@ -33,13 +34,19 @@ class ClusteringManager():
 		kmeans = cluster.KMeans(n_clusters=k).fit(vr)
 		return kmeans.labels_
 
-	def calculer_clustering_G(self):
+	def spectral_clustering(self, afficher=False):
 		G, k = self.G, self.k
-		#S = self.calculer_similarite_fw(G)
-		S = G
+		S = self.calculer_similarite_fw(G)
+		#S = G
 		L = self.calculer_laplacien(S)
 		w, vr = self.calculer_k_eig(L, k)
 		self.labels = self.clusters(vr, k)
 		ga = GestionnaireAffichage(G)
-		M = ga.calculer_affichage_optimise()
-		ga.afficher_points(M, debug=False, labels=self.labels)
+		M = ga.calculer_affichage_optimise(verbose=False)
+		if afficher:
+			ga.afficher_points(M, debug=False, labels=self.labels)
+		return self.labels
+
+	def graph_clustering(self):
+		"Effectue un clustering à partir des representations graphiques des graphes"
+		pass

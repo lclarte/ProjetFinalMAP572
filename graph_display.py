@@ -3,7 +3,7 @@ np = core.np
 np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
 
-class GestionnaireAffichage():
+class GestionnaireAffichage:
 	def __init__(self, G):
 		self.G = G
 		n = len(self.G)
@@ -33,7 +33,9 @@ class GestionnaireAffichage():
 		plt.show()
 
 	def afficher_points(self, M, debug=True, D=None, labels=None):
-		colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+		if labels is None:
+			labels = [0]*len(M)
+		colors = ['k', 'b', 'g', 'r', 'c', 'm', 'y', 'w']
 		plt.clf()
 		n = len(self.G)
 		X, Y = M[:, 0], M[:, 1]
@@ -46,7 +48,7 @@ class GestionnaireAffichage():
 		for i in range(n):
 			for j in range(n):
 				if self.G[i, j] == 1:
-					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='k')
+					plt.plot([X[i], X[j]], [Y[i], Y[j]], linestyle=':', color='k')
 		plt.suptitle(self.suptitle)
 		plt.show()
 
@@ -112,11 +114,3 @@ def floyd_warshall(G):
 def calculer_D_star(D):
 	D_max = np.max(D)
 	return D/D_max
-
-if __name__ == '__main__':
-	G = core.construire_G(20)
-	g = GestionnaireAffichage(G)
-	M = g.calculer_points_affichage()
-	g.afficher_points(M, debug=False)
-	M = g.calculer_affichage_optimise()
-	g.afficher_points(M, debug=False, D=floyd_warshall(g.G))

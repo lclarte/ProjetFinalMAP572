@@ -1,5 +1,6 @@
 import core, time
 import numpy as np
+import matplotlib.pyplot as plt
 
 def compare_construire_G(size, nb_runs):
 	times_construire_1 = np.zeros(nb_runs)
@@ -18,7 +19,22 @@ def compare_construire_G(size, nb_runs):
 	avg_2 = np.average(times_construire_2)
 	return avg_1, avg_2
 
-print(compare_construire_G(500, 100))
-#Avec ces parametres : size = 500, nb_runs = 100 : 
-#non optimise : 0.20192468643188477
-#optimise : 0.10074010848999024
+#cette fonction sert a calculer la variance du degre des sommets 
+#pour mettre en evidence que quand delta augmente, la variance diminue
+def variance_degres_delta():
+	deltas = [0.5*i for i in range(100)]
+	N, variances = 1000, []
+	variances = []
+	for d in deltas:
+		print('delta = ', d)
+		G = core.construire_G_delta(N, d)
+		degres_sommets = np.sum(G, axis=0)
+		variance = np.var(degres_sommets)
+		variances.append(variance)
+	X = np.linspace(1, len(variances), len(variances))
+	plt.plot(X, variances)
+	plt.show()
+
+#trace le score moyen des sommets de degre d en fonction de d
+def pagerank_score_degre_entrant():
+	pass
