@@ -18,11 +18,18 @@ def calculer_vecteur_pagerank(P):
 	"P est la matrice P_epsilon calculee par la fonction calculer_matrice_pagerank"
 	w, vl, vr = linalg.eig(P, left=True, right=True)
 	w = w.astype(np.float64)
-	#TODO : calculer 
+	indice = np.where(w >= 1-10**-14)
+	assert len(indice) == 1
+	vecteur = vl[:, indice[0]]
+	vecteur.shape = (len(vecteur),1)
+	return vecteur
 
-import core
-G = core.construire_G(5)
-A_tilde = normaliser_matrice_adjacence(G)
-print("A_tilde = ", A_tilde)
-P = calculer_matrice_pagerank(A_tilde)
-calculer_vecteur_pagerank(P)
+def page_rank(G, epsilon=0.15):
+	A_tilde = normaliser_matrice_adjacence(G)
+	P = calculer_matrice_pagerank(A_tilde, epsilon)
+	vec =  calculer_vecteur_pagerank(P)
+	if vec[0, 0] < 0:
+		vec *= -1
+	return vec
+
+

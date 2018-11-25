@@ -52,7 +52,7 @@ class GestionnaireAffichage:
 		plt.suptitle(self.suptitle)
 		plt.show()
 
-	def calculer_affichage_optimise(self, verbose=True):
+	def calculer_affichage_optimise(self, verbose=False):
 		#initialisation
 		D_star = calculer_D_star(floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
