@@ -36,8 +36,7 @@ class ClusteringManager():
 
 	def spectral_clustering(self, afficher=False):
 		G, k = self.G, self.k
-		S = self.calculer_similarite_fw(G)
-		#S = G
+		S = G
 		L = self.calculer_laplacien(S)
 		w, vr = self.calculer_k_eig(L, k)
 		self.labels = self.clusters(vr, k)
@@ -47,6 +46,12 @@ class ClusteringManager():
 			ga.afficher_points(M, debug=False, labels=self.labels)
 		return self.labels
 
-	def graph_clustering(self):
+	def graph_clustering(self, afficher=False):
 		"Effectue un clustering à partir des representations graphiques des graphes"
-		pass
+		ga = GestionnaireAffichage(self.G)
+		M = ga.calculer_affichage_optimise()
+		kmeans = cluster.KMeans(n_clusters=k).fit(M)
+		self.labels = kmeans.labels_
+		if afficher:
+			ga.afficher_points(M, debug=False, labels=self.labels)
+		return kmeans.labels_
