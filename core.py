@@ -54,6 +54,21 @@ def construire_G_optimise(n, fn_probas=None):
 		liste, degres = recurrence_G_optimise(liste, degres, fn_probas)
 	return list_to_matrix(liste)
 
+#Stochastic Bloch-Model
+def simuler_SBM(n, K, q):
+	#q : matrice symétrique de taille K x K ou q[i, j] : proba de liens entre les classes i et j
+	#repartition des sommets : in(n/K) sommets par classe, sauf pour la derniere qui prend le reste des 
+	#divisions des autres
+	matrice_adjacence = np.zeros((n, n))
+	nb = int(n/K)
+	for i in range(n):
+		classe_i = min(int(i/nb), K-1)
+		for j in range(n):
+			classe_j = min(int(j/nb), K-1)
+			pij, X = q[classe_i, classe_j], np.random.uniform()
+			matrice_adjacence[i, j] = matrice_adjacence[j, i] = [0, 1][X <= pij]
+	return matrice_adjacence
+
 #fonction pour le delta-attachement préférentiel
 def fn_probas_delta(degre, somme, delta):
 	#somme = 2*k - 1 
