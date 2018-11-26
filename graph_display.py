@@ -33,13 +33,6 @@ class GestionnaireAffichage:
 					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='r')
 		plt.show()
 
-	def calculer_affichage_optimise(self):
-		D_star = calculer_D_star(floyd_warshall(self.G))
-		M = self.calculer_points_affichage()
-		res = opti.minimize(lambda m:energie_vec(m, D_star), vectoriser_M(M))
-		M = matriciser_M(res.x)
-		return M
-
 	def afficher_points(self, M, debug=True, D=None, labels=None, gradient=False):
 		"gradient = True, on va utiliser des gradients de couleur pour l'affichage : \
 		plus un sommet est bas, plus sa couleur sera foncee"
@@ -77,8 +70,10 @@ class GestionnaireAffichage:
 				plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
 				plt.show()
 		elif method == 1:
+			print("M.shape = ", M.shape)
 			res = opti.minimize(lambda m: energie_vec(m, D_star), vectoriser_M(M))
 			M = matriciser_M(res.x)
+			print(res.success)
 			if not res.success:
 				raise Exception("La minimisation n'a pas convergé")
 		else:
@@ -123,6 +118,13 @@ class GestionnaireAffichage3D(GestionnaireAffichage):
 					ax.plot(X[[i, j]], Y[[i, j]], Z[[i, j]])
 		plt.show()
 
+	def calculer_affichage_optimise(self):
+		D_star = calculer_D_star(floyd_warshall(self.G))
+		M = self.calculer_points_affichage()
+		res = opti.minimize(lambda m:energie_vec(m, D_star), vectoriser_M(M))
+		M = matriciser_M(res.x)
+		return M
+
 def matriciser_M(M_vec, dim=2):
 	n = int(len(M_vec)/dim)
 	M = np.zeros((n, dim))
@@ -151,6 +153,22 @@ def energie(M, D_star):
 	tmp_f = lambda x : [x, 1.0][x == 0.0]
 	denominateur = np.array([[tmp_f(D_star[i, j]**2) for i in range(n)] for j in range(n)])
 	return np.sum(numerateur/denominateur)
+
+def energie_ressorts_vec(M, G, dim=2):
+	return energie_ressorts(matriciser_M(M, dim), G)
+
+#a ne pas utiliser : en l'etat, cette fonction de marche pas
+def energie_ressorts(M, G):
+	"Proposition d'une autre energie, basee sur l'energie d'un ressort"
+	n = len(M)
+	epsilon = 0.5 #constance de raideur, arbitraire
+	distances = np.array([[np.linalg.norm(M[i] - M[j]) for j in range(n)] for i in range(n)])
+	distances_carre = distances**2
+	energie_ressort = np.sum(distances_carre)
+	distances_liens = ((distances - 1)**2)*G #on ne prend que les elements qui sont relies
+	energie_liens = 0.5*np.sum(distances_liens) #on multiplie par 0.5 car on a pris les aretes deux fois en compte
+	return - energie_ressort + 5*energie_liens
+
 
 def calculer_gradient_energie(M, D_star):
 	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
