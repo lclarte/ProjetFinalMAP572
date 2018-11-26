@@ -20,15 +20,17 @@ def calculer_vecteur_pagerank(P):
 	w = w.astype(np.float64)
 	indice = np.where(w >= 1-10**-14)
 	assert len(indice) == 1
-	vecteur = vl[:, indice[0]]
-	vecteur.shape = (len(vecteur),1)
+	#vecteur = vl[:, indice[0]]
+	#ligne d'apres est experimentale 
+	vecteur = np.transpose(vl)[indice[0][0]]
+	print("cteur = ", vecteur)
 	return vecteur
 
 def page_rank(G, epsilon=0.15):
 	A_tilde = normaliser_matrice_adjacence(G)
 	P = calculer_matrice_pagerank(A_tilde, epsilon)
 	vec =  calculer_vecteur_pagerank(P)
-	if vec[0, 0] < 0:
+	if vec[0] < 0:
 		vec *= -1
 	return vec
 

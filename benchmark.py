@@ -1,4 +1,5 @@
 import core, time
+import pagerank as pr
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -36,5 +37,20 @@ def variance_degres_delta():
 	plt.show()
 
 #trace le score moyen des sommets de degre d en fonction de d
-def pagerank_score_degre_entrant():
-	pass
+def pagerank_score_degre_entrant(n=20):
+	G = core.construire_G(n)
+	vec = pr.page_rank(G)
+	vec = [int(10000*np.real(x))/10000 for x in vec]
+	degres = np.sum(G, axis=1).astype(int)
+	dic = {}
+	for i in range(len(degres)):
+		d = degres[i]
+		if not d in dic:
+			dic[d] = []
+		dic[d].append(vec[i])
+	dic = {d : np.average(dic[d]) for d in dic}
+	X = np.array(list(dic))
+	Y = np.array([dic[d] for d in X])
+	i = np.argsort(X)
+	plt.plot(X[i], Y[i], marker='o')
+	plt.show()
