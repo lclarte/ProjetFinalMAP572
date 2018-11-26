@@ -2,6 +2,7 @@ import core
 np = core.np
 np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
+import scipy.optimize as opti
 
 class GestionnaireAffichage:
 	def __init__(self, G):
@@ -52,26 +53,57 @@ class GestionnaireAffichage:
 		plt.suptitle(self.suptitle)
 		plt.show()
 
-	def calculer_affichage_optimise(self, verbose=False):
+	def calculer_affichage_optimise(self, verbose=False, method=0):
+		"Si method = 0, on utilise notre methode personnelle"
 		#initialisation
 		D_star = calculer_D_star(floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
 		n = len(M)
+		grad_e_normes, energies = [], []
+		if method == 0:
+			M, grad_e_normes, energies = affichage_optimise_gradient(M, D_star)
+			if verbose:
+				plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
+				plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
+				plt.show()
+		elif method == 1:
+			res = opti.minimize(lambda m: energie_vec(m, D_star), vectoriser_M(M))
+			M = matriciser_M(res.x)
+		else:
+			raise Exception("Argument method incorrect")
+		return M
+
+	def affichage_optimise_gradient(self, M, D_star):
 		gradient = None
-		energies = []
 		grad_e_normes = []
-		#on essaie avec un certain nombre d'iterations 
+		energies = []
 		while gradient is None or np.linalg.norm(gradient) >= n*n*self.seuil:
 		#for iter in range(self.nb_iter):
 			gradient = calculer_gradient_energie(M, D_star)
 			M += -self.delta_t*gradient
 			energies.append(energie(M, D_star))
 			grad_e_normes.append(np.linalg.norm(gradient))
-		if verbose:
-			plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
-			plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
-			plt.show()
-		return M
+		return M, grad_e_normes, energies
+
+def matriciser_M(M_vec):
+	n = int(len(M_vec)/2)
+	M = np.zeros((n, 2))
+	for i in range(n):
+		for j in range(2):
+			M[i, j] = M_vec[2*i + j]
+	return M
+
+def vectoriser_M(M):
+	n = len(M)
+	M_vec = np.zeros((2*n,1))
+	for i in range(n):
+		for j in range(2):
+			 M_vec[2*i + j] = M[i, j]
+	return M_vec
+
+def energie_vec(M_vec, D_star):
+	"Vectorisation de la fonction energie. Necessaire pour utiliser scipy.optimize.minimize"
+	return energie(matriciser_M(M_vec), D_star)
 
 def energie(M, D_star):
 	n = len(M)
