@@ -2,21 +2,8 @@ import core
 np = core.np
 np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import scipy.optimize as opti
-
-class GestionnaireAffichage3D(GestionnaireAffichage):
-	def __init__(self, G):
-		super(GestionnaireAffichage3D, self).__init__(G)
-
-	def calculer_points_affichage(self)
-		n = len(self.G)
-		X = np.random.uniform(size=n)
-		Y = np.random.uniform(size=n)
-		Z = np.random.uniform(size=n)
-		return np.array([x, y, z] for (x, y) in zip(X, Y, Z))
-
-	def afficher_points(self, ):
-		pass
 
 class GestionnaireAffichage:
 	def __init__(self, G):
@@ -103,6 +90,32 @@ class GestionnaireAffichage:
 			energies.append(energie(M, D_star))
 			grad_e_normes.append(np.linalg.norm(gradient))
 		return M, grad_e_normes, energies
+
+
+class GestionnaireAffichage3D(GestionnaireAffichage):
+	def __init__(self, G):
+		super(GestionnaireAffichage3D, self).__init__(G)
+
+	def calculer_points_affichage(self):
+		n = len(self.G)
+		X = np.random.uniform(size=n)
+		Y = np.random.uniform(size=n)
+		Z = np.random.uniform(size=n)
+		return np.array([[x, y, z] for (x, y, z) in zip(X, Y, Z)])
+
+	def afficher_points(self, M):
+		assert len(M) == len(self.G)
+		n = len(M)
+		fig = plt.figure()
+		ax  = fig.add_subplot(111, projection='3d')
+		X, Y, Z = M[:, 0], M[:, 1], M[:, 2]
+		for i in range(n):
+			ax.scatter([X[i]], [Y[i]], [Z[i]])
+			for j in range(i, n):
+				if self.G[i, j] == 1:
+					ax.plot(X[[i, j]], Y[[i, j]], Z[[i, j]])
+		plt.show()
+
 
 def matriciser_M(M_vec):
 	n = int(len(M_vec)/2)
