@@ -33,6 +33,13 @@ class GestionnaireAffichage:
 					plt.plot([X[i], X[j]], [Y[i], Y[j]], color='r')
 		plt.show()
 
+	def calculer_affichage_optimise(self):
+		D_star = calculer_D_star(floyd_warshall(self.G))
+		M = self.calculer_points_affichage()
+		res = opti.minimize(lambda m:energie_vec(m, D_star), vectoriser_M(M))
+		M = matriciser_M(res.x)
+		return M
+
 	def afficher_points(self, M, debug=True, D=None, labels=None, gradient=False):
 		"gradient = True, on va utiliser des gradients de couleur pour l'affichage : \
 		plus un sommet est bas, plus sa couleur sera foncee"
@@ -116,26 +123,26 @@ class GestionnaireAffichage3D(GestionnaireAffichage):
 					ax.plot(X[[i, j]], Y[[i, j]], Z[[i, j]])
 		plt.show()
 
-
-def matriciser_M(M_vec):
-	n = int(len(M_vec)/2)
-	M = np.zeros((n, 2))
+def matriciser_M(M_vec, dim=2):
+	n = int(len(M_vec)/dim)
+	M = np.zeros((n, dim))
 	for i in range(n):
-		for j in range(2):
-			M[i, j] = M_vec[2*i + j]
+		for j in range(dim):
+			M[i, j] = M_vec[dim*i + j]
 	return M
-
+	
 def vectoriser_M(M):
-	n = len(M)
-	M_vec = np.zeros((2*n,1))
+	n, dim = M.shape
+	M_vec = np.zeros((dim*n,1))
 	for i in range(n):
-		for j in range(2):
-			 M_vec[2*i + j] = M[i, j]
+		for j in range(dim):
+			 M_vec[dim*i + j] = M[i, j]
 	return M_vec
 
-def energie_vec(M_vec, D_star):
+#Normalement, la fonction d'energie marche aussi en dimension 3
+def energie_vec(M_vec, D_star, dim=2):
 	"Vectorisation de la fonction energie. Necessaire pour utiliser scipy.optimize.minimize"
-	return energie(matriciser_M(M_vec), D_star)
+	return energie(matriciser_M(M_vec, dim), D_star)
 
 def energie(M, D_star):
 	n = len(M)
@@ -148,7 +155,8 @@ def energie(M, D_star):
 def calculer_gradient_energie(M, D_star):
 	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
 	a chacune des composantes"
-	tmp_vec = lambda vec, dist: [vec/dist, np.zeros((2,))][dist == 0.0]
+	dim = M.shape[1]
+	tmp_vec = lambda vec, dist: [vec/dist, np.zeros((dim,))][dist == 0.0]
 	tmp_coeffs = lambda x, dist: [x/dist, 0.0][dist == 0.0]
 	#ces deux fonctions permettent d'effectuer les operations avec numpy sans avoir des nan partout
 	n = len(M)
