@@ -54,3 +54,14 @@ def pagerank_score_degre_entrant(n=20):
 	i = np.argsort(X)
 	plt.plot(X[i], Y[i], marker='o')
 	plt.show()
+
+def test_triche_pagerank(n=2000):
+	k = 2 #on ajoute 2 personne qui vont tricher
+	G = core.construire_G(n)
+	vec = np.real(pr.page_rank(G))
+	G2 = np.zeros((n+k, n+k))
+	G2[:n, :n] = G
+	for i in range(k):
+		G2[n+i, n-1] = 1
+	vec2 = np.real(pr.page_rank(G2))
+	return vec, vec2
