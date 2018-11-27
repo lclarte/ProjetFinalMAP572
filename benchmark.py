@@ -65,3 +65,12 @@ def test_triche_pagerank(n=3000):
 		G2[n+i, n-1] = 1
 	vec2 = np.real(pr.page_rank(G2))
 	return vec, vec2
+
+def comparer_clusterings(n, delta):
+	"Fonction qui compare les comparer_clusteringsusters entre les deux méthodes de calcul"
+	#dans un premier temps, on fait une comparaison graphique
+	G = core.construire_G_delta(n, delta)
+	ga = GestionnaireAffichage()
+	cm = ClusteringManager(G)
+	labels1 = cm.spectral_clustering()
+	labels2 = cm.graph_clustering()

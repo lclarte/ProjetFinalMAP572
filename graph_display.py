@@ -4,15 +4,17 @@ np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import scipy.optimize as opti
+import scipy.sparse.csgraph as csgraph
 
 class GestionnaireAffichage:
 	def __init__(self, G):
 		self.G = G
 		n = len(self.G)
 		self.M = None
+		self.afficher_aretes = True
 		self.nb_iter = 1000
 		self.delta_t = 0.01
-		self.seuil   = 0.0001 #norme du gradient de E "par sommet"
+		self.seuil   = 0.001 #norme du gradient de E "par sommet"
 		self.suptitle = "Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
 				"; dt : " + str(self.delta_t)
 
@@ -22,6 +24,7 @@ class GestionnaireAffichage:
 		Y = np.random.uniform(size=n)
 		return np.array([[x, y] for (x, y) in zip(X, Y)])
 
+	#Fonction un peu inutile actuellement
 	def afficher_points_vecteurs(self, M, gradient):
 		n = len(M)	
 		X, Y = M[:, 0], M[:, 1]
@@ -51,7 +54,7 @@ class GestionnaireAffichage:
 			plt.scatter(X[i], Y[i],c=colors[labels[i]])
 		for i in range(n):
 			for j in range(n):
-				if self.G[i, j] == 1:
+				if self.afficher_aretes and self.G[i, j] == 1:
 					plt.plot([X[i], X[j]], [Y[i], Y[j]], linestyle=':', color='k')
 		plt.suptitle(self.suptitle)
 		plt.show()
@@ -59,7 +62,8 @@ class GestionnaireAffichage:
 	def calculer_affichage_optimise(self, verbose=False, method=0):
 		"Si method = 0, on utilise notre methode personnelle"
 		#initialisation
-		D_star = calculer_D_star(floyd_warshall(self.G))
+		#ancienne version : D_star = calculer_D_star(floyd_warshall(self.G))
+		D_star = calculer_D_star(csgraph.floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
 		n = len(M)
 		grad_e_normes, energies = [], []
@@ -93,10 +97,14 @@ class GestionnaireAffichage:
 			grad_e_normes.append(np.linalg.norm(gradient))
 		return M, grad_e_normes, energies
 
+	def affichage_optimise_gradient_momentum(self, M, D_star):
+		pass
+
 
 class GestionnaireAffichage3D(GestionnaireAffichage):
 	def __init__(self, G):
 		super(GestionnaireAffichage3D, self).__init__(G)
+		self.options = {'maxiter': 1000}
 
 	def calculer_points_affichage(self):
 		n = len(self.G)
@@ -114,15 +122,16 @@ class GestionnaireAffichage3D(GestionnaireAffichage):
 		for i in range(n):
 			ax.scatter([X[i]], [Y[i]], [Z[i]])
 			for j in range(i, n):
-				if self.G[i, j] == 1:
+				if self.afficher_aretes and self.G[i, j] == 1:
 					ax.plot(X[[i, j]], Y[[i, j]], Z[[i, j]])
 		plt.show()
 
 	def calculer_affichage_optimise(self):
-		D_star = calculer_D_star(floyd_warshall(self.G))
+		#anciennce version : D_star = calculer_D_star(floyd_warshall(self.G))
+		D_star = calculer_D_star(csgraph.floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
-		res = opti.minimize(lambda m:energie_vec(m, D_star), vectoriser_M(M))
-		M = matriciser_M(res.x)
+		res = opti.minimize(lambda m:energie_vec(m, D_star, dim=3), vectoriser_M(M), options = self.options)
+		M = matriciser_M(res.x, dim=3)
 		return M
 
 def matriciser_M(M_vec, dim=2):

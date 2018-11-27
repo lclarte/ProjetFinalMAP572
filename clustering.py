@@ -12,11 +12,9 @@ class ClusteringManager():
 		self.G = G
 		self.k = k
 
-	def calculer_similarite_fw(self, G):
-		"Ne marche pas actuellement"
-		distances = floyd_warshall(G) + 1 #on ajoute un car pour un meme sommet, distances[i, i] = 0
-		#et l'inverse buguera
-		return (1/distances)
+	def calculer_similarite_exp(self, G):
+		"Matrice de similarite : exp(-d(i, j)^2)"
+		raise Exception("Pas encore implemente")
 
 	def calculer_laplacien(self, S):
 		diagonale = np.sum(S, axis=0)
@@ -46,12 +44,8 @@ class ClusteringManager():
 			ga.afficher_points(M, debug=False, labels=self.labels)
 		return self.labels
 
-	def graph_clustering(self, afficher=False):
+	def graph_clustering(self, M):
 		"Effectue un clustering à partir des representations graphiques des graphes"
-		ga = GestionnaireAffichage(self.G)
-		M = ga.calculer_affichage_optimise()
 		kmeans = cluster.KMeans(n_clusters=k).fit(M)
 		self.labels = kmeans.labels_
-		if afficher:
-			ga.afficher_points(M, debug=False, labels=self.labels)
 		return kmeans.labels_

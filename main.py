@@ -49,8 +49,7 @@ for e in epsilons:
 	print("epsilon = ", e, "vecteur : ", np.real(np.transpose(vec)))
 """
 
-#Pour tester la methode de scipy 
-G = core.construire_G(10)
+G = core.construire_G(200)
 ga = GestionnaireAffichage(G)
-M = ga.calculer_affichage_optimise(verbose=False, method=1)
-ga.afficher_points(M, debug=False)
+M = ga.calculer_affichage_optimise(method=1)
+ga.afficher_points(M)
