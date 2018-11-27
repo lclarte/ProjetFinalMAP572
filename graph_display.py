@@ -14,9 +14,10 @@ class GestionnaireAffichage:
 		self.afficher_aretes = True
 		self.nb_iter = 1000
 		self.delta_t = 0.01
-		self.seuil   = 0.001 #norme du gradient de E "par sommet"
+		self.seuil   = 0.0002 #norme du gradient de E "par sommet"
 		self.suptitle = "Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
 				"; dt : " + str(self.delta_t)
+		self.fonction_gradient = self.affichage_optimise_gradient
 
 	def calculer_points_affichage(self):
 		n = len(self.G)
@@ -68,7 +69,7 @@ class GestionnaireAffichage:
 		n = len(M)
 		grad_e_normes, energies = [], []
 		if method == 0:
-			M, grad_e_normes, energies = self.affichage_optimise_gradient(M, D_star)
+			M, grad_e_normes, energies = self.fonction_gradient(M, D_star)
 			if verbose:
 				plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
 				plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
@@ -98,7 +99,19 @@ class GestionnaireAffichage:
 		return M, grad_e_normes, energies
 
 	def affichage_optimise_gradient_momentum(self, M, D_star):
-		pass
+		gamma = 0.9
+		n = len(M)
+		gradient = None
+		grad_e_normes = []
+		vitesse  = np.zeros(M.shape)
+		energies = []
+		while gradient is None or np.linalg.norm(gradient) >= n*n*self.seuil:
+			gradient = calculer_gradient_energie(M, D_star)
+			vitesse = gamma	* vitesse + self.delta_t*gradient
+			M += - vitesse
+			energies.append(energie(M, D_star))
+			grad_e_normes.append(np.linalg.norm(gradient))
+		return M, grad_e_normes, energies
 
 
 class GestionnaireAffichage3D(GestionnaireAffichage):

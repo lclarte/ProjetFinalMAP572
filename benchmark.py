@@ -2,6 +2,7 @@ import core, time
 import pagerank as pr
 import numpy as np
 import matplotlib.pyplot as plt
+import graph_display as gaff
 
 def compare_construire_G(size, nb_runs):
 	times_construire_1 = np.zeros(nb_runs)
@@ -69,8 +70,16 @@ def test_triche_pagerank(n=3000):
 def comparer_clusterings(n, delta):
 	"Fonction qui compare les comparer_clusteringsusters entre les deux méthodes de calcul"
 	#dans un premier temps, on fait une comparaison graphique
-	G = core.construire_G_delta(n, delta)
-	ga = GestionnaireAffichage()
-	cm = ClusteringManager(G)
-	labels1 = cm.spectral_clustering()
-	labels2 = cm.graph_clustering()
+	pass
+
+def comparer_gradient_momentum(n=75):
+	G = core.construire_G(n)
+	ga = gaff.GestionnaireAffichage(G)
+	depart = time.time()
+	ga.calculer_affichage_optimise()
+	t1 = time.time()
+	print("Methode sans momentum : ", t1-depart)
+	ga.fonction_gradient = ga.affichage_optimise_gradient_momentum
+	ga.calculer_affichage_optimise()
+	t2 = time.time()
+	print("Methode avec momentum :", t2 - t1)
