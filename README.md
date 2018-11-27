@@ -6,8 +6,7 @@ Le fichier figures.py est chargé de l'estimation de la probabilté des différe
 Le ficher graph_display.py permet d'obtenir une représentation graphique de notre graphe, de manière optimisée. 
 
 TODO : 
-Verifier la methode pour le calcul de alpha
-Ameliorer l'affichage des graphes avec un degrade
-Tester le clustering avec le StochasticBlockModel
-Tester la minimisation de l'energie avec une fonction de minimisation toute faite
+Comparer le clustering spectral avec le clustering basé sur la visualisation
+Tester la triche sur page_rank
+Véifier la méthode pour le calcul de alpha
 
