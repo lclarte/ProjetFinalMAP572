@@ -55,8 +55,8 @@ def pagerank_score_degre_entrant(n=20):
 	plt.plot(X[i], Y[i], marker='o')
 	plt.show()
 
-def test_triche_pagerank(n=2000):
-	k = 2 #on ajoute 2 personne qui vont tricher
+def test_triche_pagerank(n=3000):
+	k = 2#on ajoute 2 personne qui vont tricher
 	G = core.construire_G(n)
 	vec = np.real(pr.page_rank(G))
 	G2 = np.zeros((n+k, n+k))

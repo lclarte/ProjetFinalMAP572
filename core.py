@@ -56,7 +56,7 @@ def construire_G_optimise(n, fn_probas=None):
 
 #Stochastic Bloch-Model
 def simuler_SBM(n, K, q):
-	#q : matrice symétrique de taille K x K ou q[i, j] : proba de liens entre les classes i et j
+	#q : matrice symetrique de taille K x K ou q[i, j] : proba de liens entre les classes i et j
 	#repartition des sommets : in(n/K) sommets par classe, sauf pour la derniere qui prend le reste des 
 	#divisions des autres
 	matrice_adjacence = np.zeros((n, n))
@@ -69,7 +69,7 @@ def simuler_SBM(n, K, q):
 			matrice_adjacence[i, j] = matrice_adjacence[j, i] = [0, 1][X <= pij]
 	return matrice_adjacence
 
-#fonction pour le delta-attachement préférentiel
+#fonction pour le delta-attachement preferentiel
 def fn_probas_delta(degre, somme, delta):
 	#somme = 2*k - 1 
 	k = (somme + 1)/2

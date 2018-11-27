@@ -34,4 +34,7 @@ def page_rank(G, epsilon=0.15):
 		vec *= -1
 	return vec
 
-
+def calculer_classement(vec, x):
+	ranking = np.flip(np.argsort(vec))
+	#ranking[c] = x ou c est le classement de x entre 0 et n-1 inclus
+	return np.where(ranking == x)[0]
