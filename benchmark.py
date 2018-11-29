@@ -83,3 +83,17 @@ def comparer_gradient_momentum(n=75):
 	ga.calculer_affichage_optimise()
 	t2 = time.time()
 	print("Methode avec momentum :", t2 - t1)
+
+def comparer_temps_iteration_2D_3D():
+	ns = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 125, 150, 175, 200, 210, 225, 250, 275, 290, 300]
+	Gs = [core.construire_G(n) for n in ns]
+	t2d = []
+	t3d = []
+	for G in Gs:
+		ga = gaff.GestionnaireAffichage(G)
+		ga3D = gaff.GestionnaireAffichage3D(G)
+		t2d.append(ga.tester_vitesse_iteration())
+		t3d.append(ga3D.tester_vitesse_iteration())
+		print("2D : ", t2d[-1])
+		print("3D : ", t3d[-1])
+	return ns, t2d, t3d

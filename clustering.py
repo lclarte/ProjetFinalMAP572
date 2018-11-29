@@ -24,7 +24,7 @@ class ClusteringManager():
 		w, vr = linalg.eig(L) #note : vr contient les vecteurs propres en tant que colonnes
 		w     = np.real(w)
 		indexes = np.argsort(w)[:k] #on prend les k premieres vp
-		w, vr = w[indexes], np.array([l[indexes] for l in vr])
+		w, vr = w[indexes], np.real(np.array([l[indexes] for l in vr]))
 		print("shape : ", vr.shape)
 		return w, vr #on extrait les k premieres lignes de vr
 
@@ -38,8 +38,6 @@ class ClusteringManager():
 		L = self.calculer_laplacien(S)
 		w, vr = self.calculer_k_eig(L, k)
 		self.labels = self.clusters(vr, k)
-		ga = GestionnaireAffichage(G)
-		M = ga.calculer_affichage_optimise(verbose=False)
 		if afficher:
 			ga.afficher_points(M, debug=False, labels=self.labels)
 		return self.labels

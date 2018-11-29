@@ -15,12 +15,13 @@ class GestionnaireAffichage:
 		self.nb_iter = 1000
 		self.options = {'maxiter': self.nb_iter}
 		self.delta_t = 0.01
-		self.seuil   = 0.0002 #norme du gradient de E "par sommet"
+		self.seuil   = 0.01 #norme du gradient de E "par sommet"
 		self.suptitle = ""
 		self.verbose = False #si on detaille lors de la descente de gradient
+		self.verbose_graphe = False #si on afficher le graphe de la norme du gradient apres le calcul
 		self.fonction_gradient = self.affichage_optimise_gradient
 		self.afficher_pts_bool = True
-		self.afficher_aretes = True
+		self.proba_afficher_arete = 1.0
 
 	def calculer_points_affichage(self):
 		n = len(self.G)
@@ -57,11 +58,10 @@ class GestionnaireAffichage:
 			for i in range(n):
 				#plt.text(X[i], Y[i], str(i+1))
 				plt.scatter(X[i], Y[i],c=colors[labels[i]])
-		if self.afficher_aretes:
-			for i in range(n):
-				for j in range(n):
-					if self.afficher_aretes and self.G[i, j] == 1:
-						plt.plot([X[i], X[j]], [Y[i], Y[j]], linestyle=':', color='k', marker=",")
+		for i in range(n):
+			for j in range(n):
+				if self.afficher_aretes and self.G[i, j] == 1 and np.random.uniform() <= self.proba_afficher_arete:
+					plt.plot([X[i], X[j]], [Y[i], Y[j]], linestyle=':', color='k', marker=",")
 		plt.suptitle(self.suptitle)
 		plt.show()
 
@@ -75,14 +75,13 @@ class GestionnaireAffichage:
 		grad_e_normes, energies = [], []
 		if method == 0:
 			M, grad_e_normes, energies = self.fonction_gradient(M, D_star, self.verbose)
-			if self.verbose:
+			if self.verbose_graphe:
 				plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
 				plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
 				plt.show()
 		elif method == 1:
 			print("M.shape = ", M.shape)
 			res = opti.minimize(lambda m: energie_vec(m, D_star), vectoriser_M(M), options = self.options, method='CG') #on utilise la methode du gradient conjugue pour ameliorer la vitesse
-			#TODO : calculer le vecteur gradient pour ameliorer la vitesse (peut être ?)
 			M = matriciser_M(res.x)
 			print(res.success)
 			if not res.success:
@@ -98,18 +97,34 @@ class GestionnaireAffichage:
 		energies = []
 		it = 0
 		depart = time.time()
-		#while gradient is None or (np.linalg.norm(gradient)**2 >= n*n*self.seuil and it < self.nb_iter):
-		for iter in range(self.nb_iter): #a mettre en commentaire normalement
+		while gradient is None or (np.linalg.norm(gradient)**2 >= n*self.seuil and it < self.nb_iter):
 			it += 1
-			if verbose: 
-				print("iteration numero ", it)
-				print("Temps ecoule depuis la derniere iteration : ", time.time() - depart)
+			if verbose:
+				#print("iteration numero ", it)
+				#print("Temps ecoule depuis la derniere iteration : ", time.time() - depart)
 				depart = time.time()
 			gradient = calculer_gradient_energie(M, D_star)
 			M += -self.delta_t*gradient
 			energies.append(energie(M, D_star))
 			grad_e_normes.append(np.linalg.norm(gradient))
+		if verbose:
+			if np.linalg.norm(gradient)**2 < n*self.seuil:
+				print("Le seuil a ete atteint !")
+			if it >= self.nb_iter:
+				print("Le nombre max d'iterations a ete depasse")
+
 		return M, grad_e_normes, energies
+
+	def tester_vitesse_iteration(self):
+		M = 10
+		essais = np.zeros(M)
+		for i in range(M):
+			M = self.calculer_points_affichage()
+			D_star = calculer_D_star(csgraph.floyd_warshall(self.G))
+			depart = time.time()
+			calculer_gradient_energie(M, D_star)
+			essais[i] = time.time() - depart		
+		return np.average(essais)
 
 	def affichage_optimise_gradient_momentum(self, M, D_star):
 		"Methode qui enregistre le moment precedent pour mettre a jour les coefficients. Ne semble pas bien fonctionner"
@@ -154,12 +169,34 @@ class GestionnaireAffichage3D(GestionnaireAffichage):
 					ax.plot(X[[i, j]], Y[[i, j]], Z[[i, j]])
 		plt.show()
 
-	def calculer_affichage_optimise(self):
+	def calculer_affichage_optimise_0(self):
 		#anciennce version : D_star = calculer_D_star(floyd_warshall(self.G))
 		D_star = calculer_D_star(csgraph.floyd_warshall(self.G))
 		M = self.calculer_points_affichage()
-		res = opti.minimize(lambda m:energie_vec(m, D_star, dim=3), vectoriser_M(M), options = self.options)
+		res = opti.minimize(lambda m:energie_vec(m, D_star, dim=3), vectoriser_M(M), options = self.options, method='CG')
 		M = matriciser_M(res.x, dim=3)
+		return M
+
+	def calculer_affichage_optimise(self, method=0):
+		D_star = calculer_D_star(csgraph.floyd_warshall(self.G))	 
+		M = self.calculer_points_affichage()
+		n = len(M)
+		grad_e_normes, energies = [], []
+		if method == 0:
+			M, grad_e_normes, energies = self.fonction_gradient(M, D_star, self.verbose)
+			if self.verbose_graphe:
+				plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
+				plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
+				plt.show()
+		elif method == 1:
+			print("M.shape = ", M.shape)
+			res = opti.minimize(lambda m: energie_vec(m, D_star, dim=3), vectoriser_M(M), options = self.options, method='CG') #on utilise la methode du gradient conjugue pour ameliorer la vitesse
+			M = matriciser_M(res.x, dim=3)
+			print(res.success)
+			if not res.success:
+				raise Exception("La minimisation n'a pas convergé")
+		else:
+			raise Exception("Argument method incorrect")
 		return M
 
 #FONCTIONS UTILISEES POUR FAIRE USAGE DE OPTIMIZE.MINIMIZE
@@ -193,7 +230,7 @@ def energie(M, D_star):
 	return np.sum(numerateur/denominateur)
 
 def calculer_gradient_energie(M, D_star):
-	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
+	"Renvoie une matrice N x dim qui correspond au 'gradient' de l'energie par rapport \
 	a chacune des composantes"
 	dim = M.shape[1]
 	tmp_vec = lambda vec, dist: [vec/dist, np.zeros((dim,))][dist == 0.0]

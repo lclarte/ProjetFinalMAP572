@@ -50,36 +50,51 @@ for e in epsilons:
 	print("epsilon = ", e, "vecteur : ", np.real(np.transpose(vec)))
 """
 
-def tester_validite_n2():
-	ns = [10, 20, 100, 200, 1000]
+def tester_validite_n():
+	ns = [10, 20, 30, 40, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 500, 750, 1000]
 	Gs = [core.construire_G(n) for n in ns]
-	X = np.linspace(1, 100, 100)
+	Y = []
+	#X = np.linspace(1, 100, 100)
 	for i in range(len(Gs)):
-		print("n : ", ns[i])
 		n = ns[i]
 		g = Gs[i]
 		ga = g_d.GestionnaireAffichage(g)
-		ga.nb_iter = 100
-		ga.delta_t = 0.0001
 		M = ga.calculer_points_affichage()
 		D_star = g_d.calculer_D_star(csgraph.floyd_warshall(g))
+		Y.append(g_d.energie(M, D_star)/float(n*n))
+		"""
+		print("n : ", ns[i])
+		ga.nb_iter = 100
+		ga.delta_t = 0.0001
 		M, grad_e_normes, energies = ga.fonction_gradient(M, D_star)
-		grad_e_normes = np.array(grad_e_normes)/(float(n*n))
+		grad_e_normes = np.array(grad_e_normes)/(n*np.sqrt(n))
 		plt.plot(X, grad_e_normes, label="n = " + str(n))
-	legend = plt.legend(loc='upper center', shadow=False, fontsize='x-large')
+		"""
+	plt.scatter(ns, Y)
+	#legend = plt.legend(loc='upper center', shadow=False, fontsize='x-large')
 	plt.show()
 
 def tester_SBMMatrice():
 	G = np.loadtxt("SBMMatrice.txt")
 	ga = g_d.GestionnaireAffichage(G)
 	ga.verbose = True
-	ga.nb_iter = 300
+	ga.nb_iter = 500
 	ga.delta_t = 0.0001 #TRES PETITE CONSTANTE
-	ga.afficher_aretes = False
 	M = ga.calculer_affichage_optimise()
-	cm = ClusteringManager(G, 2)
+	return M	
+
+def afficher_graphe_SBM():
+	n = 100
+	K = 5
+	q = 0.8*np.eye(K) + 0.1*np.ones((K, K))
+	G = core.simuler_SBM(n, K, q)
+	ga = g_d.GestionnaireAffichage(G)
+	ga.verbose = True
+	M = ga.calculer_affichage_optimise()
+	ga.proba_afficher_arete = 0.01
+	cm = ClusteringManager(G, K)
 	labels_ = cm.spectral_clustering()
-	ga.afficher_points(M, label=labels_)
+	ga.afficher_points(M, labels=labels_)
 	return G, M
 
-tester_validite_n2()
+G = afficher_graphe_SBM()
