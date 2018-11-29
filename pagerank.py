@@ -23,7 +23,7 @@ def calculer_vecteur_pagerank(P):
 	#vecteur = vl[:, indice[0]]
 	#ligne d'apres est experimentale 
 	vecteur = np.transpose(vl)[indice[0][0]]
-	print("cteur = ", vecteur)
+	print("vecteur = ", vecteur)
 	return vecteur
 
 def page_rank(G, epsilon=0.15):

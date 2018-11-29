@@ -1,4 +1,4 @@
-import core
+import core, time
 np = core.np
 np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
@@ -13,11 +13,14 @@ class GestionnaireAffichage:
 		self.M = None
 		self.afficher_aretes = True
 		self.nb_iter = 1000
+		self.options = {'maxiter': self.nb_iter}
 		self.delta_t = 0.01
 		self.seuil   = 0.0002 #norme du gradient de E "par sommet"
-		self.suptitle = "Affichage optimise pour " + str(n) + " points. \n Nombre d'iterations : " + str(self.nb_iter) + \
-				"; dt : " + str(self.delta_t)
+		self.suptitle = ""
+		self.verbose = False #si on detaille lors de la descente de gradient
 		self.fonction_gradient = self.affichage_optimise_gradient
+		self.afficher_pts_bool = True
+		self.afficher_aretes = True
 
 	def calculer_points_affichage(self):
 		n = len(self.G)
@@ -25,7 +28,7 @@ class GestionnaireAffichage:
 		Y = np.random.uniform(size=n)
 		return np.array([[x, y] for (x, y) in zip(X, Y)])
 
-	#Fonction un peu inutile actuellement
+	#Fonction un peu inutile actuellement, sert juste a visualiser les vecteurs 
 	def afficher_points_vecteurs(self, M, gradient):
 		n = len(M)	
 		X, Y = M[:, 0], M[:, 1]
@@ -50,33 +53,36 @@ class GestionnaireAffichage:
 		if debug:
 			if not D is None:
 				print("distances : ", D)
-		for i in range(n):
-			plt.text(X[i], Y[i], str(i+1))
-			plt.scatter(X[i], Y[i],c=colors[labels[i]])
-		for i in range(n):
-			for j in range(n):
-				if self.afficher_aretes and self.G[i, j] == 1:
-					plt.plot([X[i], X[j]], [Y[i], Y[j]], linestyle=':', color='k')
+		if self.afficher_pts_bool:
+			for i in range(n):
+				#plt.text(X[i], Y[i], str(i+1))
+				plt.scatter(X[i], Y[i],c=colors[labels[i]])
+		if self.afficher_aretes:
+			for i in range(n):
+				for j in range(n):
+					if self.afficher_aretes and self.G[i, j] == 1:
+						plt.plot([X[i], X[j]], [Y[i], Y[j]], linestyle=':', color='k', marker=",")
 		plt.suptitle(self.suptitle)
 		plt.show()
 
-	def calculer_affichage_optimise(self, verbose=False, method=0):
+	def calculer_affichage_optimise(self, method=0):
 		"Si method = 0, on utilise notre methode personnelle"
 		#initialisation
 		#ancienne version : D_star = calculer_D_star(floyd_warshall(self.G))
-		D_star = calculer_D_star(csgraph.floyd_warshall(self.G))
+		D_star = calculer_D_star(csgraph.floyd_warshall(self.G))	 
 		M = self.calculer_points_affichage()
 		n = len(M)
 		grad_e_normes, energies = [], []
 		if method == 0:
-			M, grad_e_normes, energies = self.fonction_gradient(M, D_star)
-			if verbose:
+			M, grad_e_normes, energies = self.fonction_gradient(M, D_star, self.verbose)
+			if self.verbose:
 				plt.plot(np.linspace(1, len(energies), len(energies)), grad_e_normes)
 				plt.suptitle("Evolution du gradient de l'energie en fonction des iterations")
 				plt.show()
 		elif method == 1:
 			print("M.shape = ", M.shape)
-			res = opti.minimize(lambda m: energie_vec(m, D_star), vectoriser_M(M))
+			res = opti.minimize(lambda m: energie_vec(m, D_star), vectoriser_M(M), options = self.options, method='CG') #on utilise la methode du gradient conjugue pour ameliorer la vitesse
+			#TODO : calculer le vecteur gradient pour ameliorer la vitesse (peut être ?)
 			M = matriciser_M(res.x)
 			print(res.success)
 			if not res.success:
@@ -85,13 +91,20 @@ class GestionnaireAffichage:
 			raise Exception("Argument method incorrect")
 		return M
 
-	def affichage_optimise_gradient(self, M, D_star):
+	def affichage_optimise_gradient(self, M, D_star, verbose=False):
 		n = len(M)
 		gradient = None
 		grad_e_normes = []
 		energies = []
-		while gradient is None or np.linalg.norm(gradient) >= n*n*self.seuil:
-		#for iter in range(self.nb_iter):
+		it = 0
+		depart = time.time()
+		#while gradient is None or (np.linalg.norm(gradient)**2 >= n*n*self.seuil and it < self.nb_iter):
+		for iter in range(self.nb_iter): #a mettre en commentaire normalement
+			it += 1
+			if verbose: 
+				print("iteration numero ", it)
+				print("Temps ecoule depuis la derniere iteration : ", time.time() - depart)
+				depart = time.time()
 			gradient = calculer_gradient_energie(M, D_star)
 			M += -self.delta_t*gradient
 			energies.append(energie(M, D_star))
@@ -99,6 +112,7 @@ class GestionnaireAffichage:
 		return M, grad_e_normes, energies
 
 	def affichage_optimise_gradient_momentum(self, M, D_star):
+		"Methode qui enregistre le moment precedent pour mettre a jour les coefficients. Ne semble pas bien fonctionner"
 		gamma = 0.9
 		n = len(M)
 		gradient = None
@@ -117,7 +131,8 @@ class GestionnaireAffichage:
 class GestionnaireAffichage3D(GestionnaireAffichage):
 	def __init__(self, G):
 		super(GestionnaireAffichage3D, self).__init__(G)
-		self.options = {'maxiter': 1000}
+		self.nb_iter = 1000
+		self.options = {'maxiter': self.nb_iter}
 
 	def calculer_points_affichage(self):
 		n = len(self.G)
@@ -147,6 +162,7 @@ class GestionnaireAffichage3D(GestionnaireAffichage):
 		M = matriciser_M(res.x, dim=3)
 		return M
 
+#FONCTIONS UTILISEES POUR FAIRE USAGE DE OPTIMIZE.MINIMIZE
 def matriciser_M(M_vec, dim=2):
 	n = int(len(M_vec)/dim)
 	M = np.zeros((n, dim))
@@ -163,7 +179,7 @@ def vectoriser_M(M):
 			 M_vec[dim*i + j] = M[i, j]
 	return M_vec
 
-#Normalement, la fonction d'energie marche aussi en dimension 3
+#FONCTIONS UTILISEES POUR LE CALCUL DE L'ENERGIE PROPOSEE PAR L'ENONCE
 def energie_vec(M_vec, D_star, dim=2):
 	"Vectorisation de la fonction energie. Necessaire pour utiliser scipy.optimize.minimize"
 	return energie(matriciser_M(M_vec, dim), D_star)
@@ -175,22 +191,6 @@ def energie(M, D_star):
 	tmp_f = lambda x : [x, 1.0][x == 0.0]
 	denominateur = np.array([[tmp_f(D_star[i, j]**2) for i in range(n)] for j in range(n)])
 	return np.sum(numerateur/denominateur)
-
-def energie_ressorts_vec(M, G, dim=2):
-	return energie_ressorts(matriciser_M(M, dim), G)
-
-#a ne pas utiliser : en l'etat, cette fonction de marche pas
-def energie_ressorts(M, G):
-	"Proposition d'une autre energie, basee sur l'energie d'un ressort"
-	n = len(M)
-	epsilon = 0.5 #constance de raideur, arbitraire
-	distances = np.array([[np.linalg.norm(M[i] - M[j]) for j in range(n)] for i in range(n)])
-	distances_carre = distances**2
-	energie_ressort = np.sum(distances_carre)
-	distances_liens = ((distances - 1)**2)*G #on ne prend que les elements qui sont relies
-	energie_liens = 0.5*np.sum(distances_liens) #on multiplie par 0.5 car on a pris les aretes deux fois en compte
-	return - energie_ressort + 5*energie_liens
-
 
 def calculer_gradient_energie(M, D_star):
 	"Renvoie une matrice N x 2 qui correspond au 'gradient' de l'energie par rapport \
@@ -209,8 +209,26 @@ def calculer_gradient_energie(M, D_star):
 	gradient_E = np.array([gradient_E[i, i] for i in range(n)])
 	return gradient_E
 
+#ESSAI D'UNE AUTRE ENERGIE, BASEE SUR L'ENERGIE D'UN RESSORT
+#NE MARCHE PAS ACTUELLEMENT
+#ESSAYER UNE AUTRE METHODE : FAIRE LE BILAN DES FORCES SUR CHACUN DES SOMMETS COMME DANS LE MAILLAGE
+def energie_ressorts_vec(M, G, dim=2):
+	return energie_ressorts(matriciser_M(M, dim), G)
+
+def energie_ressorts(M, G):
+	"Proposition d'une autre energie, basee sur l'energie d'un ressort"
+	n = len(M)
+	epsilon = 0.5 #constance de raideur, arbitraire
+	distances = np.array([[np.linalg.norm(M[i] - M[j]) for j in range(n)] for i in range(n)])
+	distances_carre = distances**2
+	energie_ressort = np.sum(distances_carre)
+	distances_liens = ((distances - 1)**2)*G #on ne prend que les elements qui sont relies
+	energie_liens = 0.5*np.sum(distances_liens) #on multiplie par 0.5 car on a pris les aretes deux fois en compte
+	return - energie_ressort + 5*energie_liens
+
 #Fonctions pour le calcul de la matrice D_star
 
+#OBSOLETE : UTILISER A LA PLACE
 def floyd_warshall(G):
 	M, n = np.copy(G), len(G)
 	f = lambda x: [float('inf'), 1.0][int(x)]

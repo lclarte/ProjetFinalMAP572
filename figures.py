@@ -1,7 +1,7 @@
 import core
 np = core.np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
+import scipy.stats as stats
 
 """
 Nota bene : si on a un linspace l , et qu'on veut selectionner une sous matrice a partir de l
@@ -39,7 +39,6 @@ class GestionnaireCalcul:
 			#on fait la moyenne sur les sommets qui sont les indices des lignes de la matrice
 			#donc on fait np.average(..., axis=0)
 			probas_degres = np.average(probas_degres_sommets, axis=0)
-			print(probas_degres)
 			return probas_degres
 		except Exception as e:
 			print("Erreur dans la matrice sommets_degres_comptes :", e)
@@ -51,19 +50,23 @@ class GestionnaireCalcul:
 	def sauvegarder_sdc(self, fichier):
 		np.save(fichier, self.sommets_degres_comptes)
 
-def afficher_log_log(probas, M):
+def afficher_log_log(probas,M=0):
 	N = len(probas)
 	X = np.log(np.linspace(1, N, N))
 	Y = np.log(probas)
+	slope, intercept, rvalue, pvalue, std_err = stats.linregress(X, y=Y)
+	print("Coefficient directeur de la regression : ", slope)
 	plt.plot(X, Y)
+	Y_droite = X*slope + intercept
+	plt.plot(X, Y_droite)
 	plt.suptitle("Courbe de log(P(s = d)) en fonction de log(d). N = " +str(N) + ", M = " + str(M))
 	plt.show()
 
-
-if __name__ == '__main__':
-	N, M = 5000, 200
+if __name__ == '__main__':	
+	N, M = 5000, 500
 	gc = GestionnaireCalcul(N, M)
 	gc.estimation_sdc(verbose=True)
 	probas = gc.calculer_probas()
+	probas = probas[:np.where(probas <= 0.0)[0][0]]
 	afficher_log_log(probas, M)
-	np.save(probas)
+	#np.save(probas)

@@ -5,7 +5,7 @@ from graph_display import *
 from core import *
 
 #Pour le graphe de similarite, on va prendre l'inverse de la matrice de distance (pour essayer) ainsi
-#que la matrice d'adjacence 
+#que la matrice d'adjacence
 
 class ClusteringManager():
 	def __init__(self, G, k):

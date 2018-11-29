@@ -84,5 +84,5 @@ def orienter_graphe(G):
 			G_or[i, j] = 0
 	return G_or
 
-construire_G = construire_G_optimise
+construire_G = construire_G_normal
 construire_G_delta = lambda n, delta: construire_G_optimise(n, fn_probas= lambda d, s: fn_probas_delta(d, s, delta))
